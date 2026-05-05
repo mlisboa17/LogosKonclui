@@ -87,7 +87,7 @@ export default async function ModeloEditPage({ params }: { params: Promise<Param
 
   const { data: itemRows } = await supabase
     .from("checklist_template_items")
-    .select("title, item_type, is_critical, weight, sort_order")
+    .select("title, item_type, is_critical, weight, sort_order, requires_photo")
     .eq("template_id", id)
     .order("sort_order", { ascending: true });
 
@@ -96,6 +96,7 @@ export default async function ModeloEditPage({ params }: { params: Promise<Param
     item_type: r.item_type as TemplateItemInput["item_type"],
     is_critical: Boolean(r.is_critical),
     weight: (r.weight as number) ?? 1,
+    requires_photo: Boolean((r as { requires_photo?: boolean }).requires_photo),
   }));
 
   return (
@@ -108,9 +109,9 @@ export default async function ModeloEditPage({ params }: { params: Promise<Param
       </Link>
       <h1 className="mb-2 text-2xl font-semibold">{canEdit ? "Editar modelo" : "Modelo"}</h1>
       <p className="mb-8 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
-        Tipos de item (como no Koncluí): <strong>Sim/Não</strong>, <strong>número</strong> (temperaturas,
-        contagens), <strong>texto</strong> e <strong>foto</strong> (evidência). Crítico aumenta peso nos
-        alertas; o gestor pode renomear itens e republicar o checklist na unidade quando quiser.
+        <strong>Sim/Não</strong>, <strong>número</strong>, <strong>texto</strong> ou <strong>só foto</strong>.
+        Marque <strong>Exige foto</strong> para obrigar evidência mesmo em itens sim/número/texto (ex.: gôndola
+        abastecida). Crítico aumenta o peso nos alertas.
       </p>
 
       {canEdit ? (
@@ -134,7 +135,8 @@ export default async function ModeloEditPage({ params }: { params: Promise<Param
                 {it.title}{" "}
                 <span className="text-zinc-500">
                   ({it.item_type}
-                  {it.is_critical ? ", crítico" : ""})
+                  {it.is_critical ? ", crítico" : ""}
+                  {it.requires_photo ? ", exige foto" : ""})
                 </span>
               </li>
             ))}

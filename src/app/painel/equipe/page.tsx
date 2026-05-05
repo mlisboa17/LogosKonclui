@@ -20,7 +20,7 @@ export default async function EquipePage() {
         <h1 className="text-2xl font-semibold tracking-tight">Equipe e score</h1>
         <p className="mt-2 max-w-lg text-sm text-zinc-600 dark:text-zinc-400">
           No modo protótipo (JSON) não há membros nem atribuições por utilizador. Use Supabase para ver
-          pontualidade por colaborador (como no Koncluí), com execuções atribuídas.
+          pontualidade por colaborador, com execuções atribuídas.
         </p>
         <Link href="/painel" className="mt-6 inline-block text-sm text-emerald-800 hover:underline dark:text-emerald-400">
           ← Visão geral
@@ -87,7 +87,12 @@ export default async function EquipePage() {
       </Link>
       <h1 className="text-2xl font-semibold tracking-tight">Equipe</h1>
       <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-        Perfis, funções na organização e pontuação de pontualidade (Koncluí).
+        Perfis, funções na organização e pontuação de pontualidade nas execuções.
+      </p>
+      <p className="mt-3 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">
+        Para <strong>cadastrar operadores</strong>: quem gere a equipa usa a secção abaixo (email + função{" "}
+        Operador). O colaborador precisa de conta em <strong>/cadastro</strong> ou convite Supabase antes de
+        poder entrar.
       </p>
 
       <div className="mt-10 space-y-10">

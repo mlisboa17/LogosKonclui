@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CreateChecklistFromTemplateForm } from "@/components/painel/CreateChecklistFromTemplateForm";
+import { ChecklistPublishingTabs } from "@/components/painel/ChecklistPublishingTabs";
 import { CreateRunForm } from "@/components/painel/CreateRunForm";
 import { getSessionContext } from "@/lib/data/memberships";
 import { getPainelContext } from "@/lib/painel-context";
@@ -22,13 +22,15 @@ export default async function ChecklistsPage() {
         <div>
           <h1 className="text-2xl font-semibold">Checklists</h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            Publique um checklist por unidade a partir de um modelo, depois abra execuções com prazo.
+            Organização do espaço de venda: publique rotinas por unidade (modelo, do zero ou cópia). Em cada
+            item pode exigir foto como evidência — ideal para freezers, gôndolas e limpeza.
           </p>
         </div>
-        <CreateChecklistFromTemplateForm
+        <ChecklistPublishingTabs
           organizationId={p.orgId}
           units={units}
           templates={templates}
+          published={checklists}
           canPublish
         />
         <div>
@@ -101,13 +103,16 @@ export default async function ChecklistsPage() {
       <div>
         <h1 className="text-2xl font-semibold">Checklists</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Publique um checklist por unidade a partir de um modelo, depois abra execuções com prazo para a equipe.
+          Rotinas por unidade: abastecimento de freezers e cervejeiras, prateleiras, expositores, limpeza e
+          padrão de loja. Crie do zero, a partir de modelo ou copiando um checklist já publicado — com opção de
+          exigir foto em cada linha.
         </p>
       </div>
-      <CreateChecklistFromTemplateForm
+      <ChecklistPublishingTabs
         organizationId={orgId}
         units={units ?? []}
         templates={templates ?? []}
+        published={checklists ?? []}
         canPublish={canPublishChecklists}
       />
       <div>

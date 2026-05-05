@@ -22,23 +22,19 @@ export default function Home() {
           Operação em padrão
         </p>
         <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl">
-          Checklists inteligentes para o seu grupo
+          Checklists para conveniência e loja no detalhe
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-zinc-400">
-          Conveniências, postos e restaurantes na mesma plataforma: modelos por setor, execuções com prazo,
-          evidências e painel do gestor — inspirado na operação moderna de{" "}
-          <a
-            href="https://konclui.com/"
-            className="text-emerald-400 underline-offset-2 hover:underline"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Koncluí
-          </a>
-          , adaptado ao varejo e combustível.
+          Organização, abastecimento de{" "}
+          <strong className="font-medium text-zinc-300">freezers</strong>,{" "}
+          <strong className="font-medium text-zinc-300">cervejeiras</strong>,{" "}
+          <strong className="font-medium text-zinc-300">prateleiras</strong>,{" "}
+          <strong className="font-medium text-zinc-300">expositores</strong> e rotinas de{" "}
+          <strong className="font-medium text-zinc-300">limpeza</strong>. Modelos editáveis, execução com
+          prazo e evidência por foto quando a sua operação exigir.
         </p>
         <p className="mx-auto mt-6 max-w-lg text-sm text-zinc-500">
-          Para testar sem Supabase: em <code className="rounded bg-white/10 px-1">.env.local</code> use{" "}
+          Para testar sem base de dados: em <code className="rounded bg-white/10 px-1">.env.local</code> use{" "}
           <code className="rounded bg-white/10 px-1">NEXT_PUBLIC_DATA_MODE=json</code> — dados ficam em{" "}
           <code className="rounded bg-white/10 px-1">data/prototype-state.json</code> (só na sua máquina).
         </p>

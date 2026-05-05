@@ -48,10 +48,18 @@ export function TeamMembersClient({
     <div className="space-y-8">
       {canManageTeam && (
         <section className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">Adicionar membro</h2>
+          <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+            Cadastro de operadores (e restante equipa)
+          </h2>
           <p className="mt-1 text-xs text-zinc-500">
-            Por email (utilizador já registado ou convite se existir chave de serviço). Função{" "}
-            <strong>proprietário</strong> só pode ser atribuída pelo proprietário atual.
+            Um <strong>operador</strong> é um utilizador que já existe no sistema: primeiro cria conta em{" "}
+            <strong>Cadastrar</strong> (site) ou recebe convite; depois o gestor acrescenta aqui pelo{" "}
+            <strong>email</strong> e escolhe a função &quot;Operador&quot;. Com{" "}
+            <code className="rounded bg-zinc-100 px-0.5 dark:bg-zinc-800">SUPABASE_SERVICE_ROLE_KEY</code> pode
+            enviar convite por email mesmo sem conta prévia.
+          </p>
+          <p className="mt-2 text-xs text-zinc-500">
+            Função <strong>proprietário</strong> só o proprietário atual pode atribuir.
           </p>
           <form
             className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"

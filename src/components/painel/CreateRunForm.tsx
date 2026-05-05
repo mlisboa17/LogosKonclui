@@ -13,7 +13,7 @@ export function CreateRunForm({
 }: {
   organizationId: string;
   checklists: (Checklist & { unit_id: string | null })[];
-  /** Supabase: membros para atribuir a execução (estilo Koncluí) */
+  /** Supabase: membros para atribuir a execução */
   assignees?: { id: string; name: string }[];
 }) {
   const router = useRouter();

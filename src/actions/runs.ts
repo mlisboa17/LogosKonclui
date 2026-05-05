@@ -30,7 +30,7 @@ async function validateCompletionSupabase(
   const [{ data: items }, { data: responses }] = await Promise.all([
     supabase
       .from("checklist_items")
-      .select("id, title, item_type, is_critical")
+      .select("id, title, item_type, is_critical, requires_photo")
       .eq("checklist_id", run.checklist_id)
       .order("sort_order", { ascending: true }),
     supabase
@@ -39,12 +39,13 @@ async function validateCompletionSupabase(
       .eq("run_id", runId),
   ]);
 
-  const list = (items ?? []) as {
-    id: string;
-    title: string;
-    item_type: string;
-    is_critical: boolean;
-  }[];
+  const list = (items ?? []).map((row) => ({
+    id: row.id as string,
+    title: row.title as string,
+    item_type: row.item_type as string,
+    is_critical: Boolean(row.is_critical),
+    requires_photo: Boolean((row as { requires_photo?: boolean }).requires_photo),
+  }));
   const res = (responses ?? []) as RunResponseForValidation[];
   const pending = firstUnsatisfiedItemTitle(list, res);
   if (pending) return { error: `Ainda pendente: ${pending}` };
@@ -71,6 +72,7 @@ async function validateCompletionJsonAsync(runId: string): Promise<{ ok: true } 
     title: i.title,
     item_type: i.itemType,
     is_critical: i.isCritical,
+    requires_photo: i.requiresPhoto === true,
   }));
   const pending = firstUnsatisfiedItemTitle(list, res);
   if (pending) return { error: `Ainda pendente: ${pending}` };
@@ -123,6 +125,11 @@ export async function createChecklistRun(input: {
   return { runId: data.id };
 }
 
+/** Hora do servidor para sincronizar marca d'água textual com o carimbo gravado na base. */
+export async function getEvidenceStampTime() {
+  return { iso: new Date().toISOString() };
+}
+
 export async function setRunStatus(
   runId: string,
   status: "in_progress" | "completed" | "late" | "missed" | "scheduled",
@@ -170,6 +177,8 @@ export async function upsertItemResponse(input: {
   numeric_value?: number | null;
   text_value?: string | null;
   photo_path?: string | null;
+  /** Modo JSON: legenda fixada no envio da foto (modo desenvolvimento). */
+  photo_evidence_caption?: string | null;
 }) {
   if (isJsonStoreMode()) {
     await jsonUpsertResponse(input);
@@ -182,10 +191,39 @@ export async function upsertItemResponse(input: {
 
   const { data: existing } = await supabase
     .from("checklist_run_responses")
-    .select("completed, note, numeric_value, text_value, photo_path")
+    .select(
+      "completed, note, numeric_value, text_value, photo_path, photo_uploaded_at, photo_uploaded_by",
+    )
     .eq("run_id", input.runId)
     .eq("checklist_item_id", input.checklistItemId)
     .maybeSingle();
+
+  const normalizePath = (p: unknown) =>
+    typeof p === "string" ? p.trim() : "";
+  const prevPhoto = normalizePath(existing?.photo_path);
+  const incomingPhotoDefined = input.photo_path !== undefined;
+  const nextPhoto = incomingPhotoDefined
+    ? normalizePath(input.photo_path) || null
+    : normalizePath(existing?.photo_path) || null;
+
+  let photo_uploaded_at: string | null =
+    (existing?.photo_uploaded_at as string | null | undefined) ?? null;
+  let photo_uploaded_by: string | null =
+    (existing?.photo_uploaded_by as string | null | undefined) ?? null;
+
+  if (incomingPhotoDefined) {
+    const nextTrim = nextPhoto ?? "";
+    if (!nextTrim) {
+      photo_uploaded_at = null;
+      photo_uploaded_by = null;
+    } else if (nextTrim !== prevPhoto) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      photo_uploaded_at = new Date().toISOString();
+      photo_uploaded_by = user?.id ?? null;
+    }
+  }
 
   const row = {
     run_id: input.runId,
@@ -196,6 +234,8 @@ export async function upsertItemResponse(input: {
       input.numeric_value !== undefined ? input.numeric_value : (existing?.numeric_value ?? null),
     text_value: input.text_value !== undefined ? input.text_value : (existing?.text_value ?? null),
     photo_path: input.photo_path !== undefined ? input.photo_path : (existing?.photo_path ?? null),
+    photo_uploaded_at,
+    photo_uploaded_by,
     responded_at: new Date().toISOString(),
   };
 

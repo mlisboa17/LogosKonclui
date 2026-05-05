@@ -3,11 +3,18 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getEvidenceStampTime, setRunStatus, upsertItemResponse } from "@/actions/runs";
+import { watermarkEvidenceImage } from "@/lib/evidence-photo-stamp";
 import { EVIDENCE_BUCKET } from "@/lib/evidence-storage";
 import { isItemSatisfied } from "@/lib/run-item-validation";
-import { setRunStatus, upsertItemResponse } from "@/actions/runs";
 
-type Item = { id: string; title: string; is_critical: boolean; item_type: string };
+type Item = {
+  id: string;
+  title: string;
+  is_critical: boolean;
+  item_type: string;
+  requires_photo?: boolean;
+};
 
 export type RunResponseRow = {
   checklist_item_id: string;
@@ -15,6 +22,9 @@ export type RunResponseRow = {
   numeric_value?: number | string | null;
   text_value?: string | null;
   photo_path?: string | null;
+  photo_uploaded_at?: string | null;
+  photo_uploaded_by_display?: string | null;
+  photo_evidence_caption?: string | null;
 };
 
 type RowState = {
@@ -22,6 +32,9 @@ type RowState = {
   numeric_value: number | null;
   text_value: string;
   photo_path: string | null;
+  photo_uploaded_at: string | null;
+  photo_uploaded_by_display: string | null;
+  photo_evidence_caption: string | null;
 };
 
 const emptyRow = (): RowState => ({
@@ -29,6 +42,9 @@ const emptyRow = (): RowState => ({
   numeric_value: null,
   text_value: "",
   photo_path: null,
+  photo_uploaded_at: null,
+  photo_uploaded_by_display: null,
+  photo_evidence_caption: null,
 });
 
 function buildState(items: Item[], responses: RunResponseRow[]): Record<string, RowState> {
@@ -47,6 +63,9 @@ function buildState(items: Item[], responses: RunResponseRow[]): Record<string, 
       numeric_value: numParsed,
       text_value: r?.text_value ?? "",
       photo_path: r?.photo_path ?? null,
+      photo_uploaded_at: r?.photo_uploaded_at ?? null,
+      photo_uploaded_by_display: r?.photo_uploaded_by_display ?? null,
+      photo_evidence_caption: r?.photo_evidence_caption ?? null,
     };
   }
   return o;
@@ -114,6 +133,7 @@ export function RunExecutionClient({
   items,
   responses,
   usePhotoStorage,
+  submitterDisplayName,
 }: {
   runId: string;
   organizationId: string;
@@ -121,6 +141,8 @@ export function RunExecutionClient({
   items: Item[];
   responses: RunResponseRow[];
   usePhotoStorage: boolean;
+  /** Nome para marca d’água e registo; em Supabase o utilizador também fica gravado na base ao enviar. */
+  submitterDisplayName: string;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -138,7 +160,7 @@ export function RunExecutionClient({
       responses
         .map(
           (r) =>
-            `${r.checklist_item_id}:${r.completed}:${r.numeric_value ?? ""}:${r.text_value ?? ""}:${r.photo_path ?? ""}`,
+            `${r.checklist_item_id}:${r.completed}:${r.numeric_value ?? ""}:${r.text_value ?? ""}:${r.photo_path ?? ""}:${r.photo_uploaded_at ?? ""}:${r.photo_uploaded_by_display ?? ""}:${r.photo_evidence_caption ?? ""}`,
         )
         .join("|"),
     [responses],
@@ -172,15 +194,23 @@ export function RunExecutionClient({
     };
   }, []);
 
-  async function persistRow(itemId: string, next: RowState) {
-    const r = await upsertItemResponse({
+  async function persistRow(
+    itemId: string,
+    next: RowState,
+    opts?: { photoEvidenceCaption?: string | null },
+  ) {
+    const payload = {
       runId,
       checklistItemId: itemId,
       completed: next.completed,
       numeric_value: next.numeric_value,
       text_value: next.text_value.trim() ? next.text_value : null,
       photo_path: next.photo_path,
-    });
+      ...(opts?.photoEvidenceCaption !== undefined
+        ? { photo_evidence_caption: opts.photoEvidenceCaption }
+        : {}),
+    };
+    const r = await upsertItemResponse(payload);
     if ("error" in r && r.error) {
       alert(r.error);
       return;
@@ -219,17 +249,37 @@ export function RunExecutionClient({
       alert("Use JPEG, PNG ou WebP.");
       return;
     }
-    const path = `${organizationId}/${runId}/${crypto.randomUUID()}.${ext}`;
+    const stamp = await getEvidenceStampTime();
+    const iso = stamp.iso;
+    const who = submitterDisplayName.trim() || "Colaborador";
+    const whenLine = new Date(iso).toLocaleString("pt-BR", {
+      dateStyle: "short",
+      timeStyle: "medium",
+    });
+    const stamped = await watermarkEvidenceImage(file, who, whenLine);
+    if ("error" in stamped) {
+      alert(`${stamped.error} Pode tirar foto nova em JPEG pela câmara.`);
+      return;
+    }
+    const uploadName = `${crypto.randomUUID()}.jpg`;
+    const path = `${organizationId}/${runId}/${uploadName}`;
     const supabase = createClient();
-    const { error } = await supabase.storage.from(EVIDENCE_BUCKET).upload(path, file, {
-      contentType: file.type || `image/${ext}`,
+    const { error } = await supabase.storage.from(EVIDENCE_BUCKET).upload(path, stamped.blob, {
+      contentType: "image/jpeg",
       upsert: false,
     });
     if (error) {
       alert(error.message);
       return;
     }
-    const next = { ...base, photo_path: path, completed: true };
+    const next = {
+      ...base,
+      photo_path: path,
+      completed: true,
+      photo_uploaded_at: null,
+      photo_uploaded_by_display: null,
+      photo_evidence_caption: null,
+    };
     setByItem((prev) => ({ ...prev, [itemId]: next }));
     start(() => persistRow(itemId, next));
   }
@@ -281,6 +331,7 @@ export function RunExecutionClient({
           const satisfied = isItemSatisfied(it, toValidationRow(it.id, st));
           const showCheckbox =
             it.item_type === "boolean" || (it.item_type === "photo" && !it.is_critical);
+          const needsPhotoEvidence = it.item_type === "photo" || it.requires_photo === true;
 
           return (
             <li key={it.id} className="px-4 py-4">
@@ -319,12 +370,15 @@ export function RunExecutionClient({
                       {it.item_type === "photo" &&
                         (it.is_critical
                           ? usePhotoStorage
-                            ? "Foto obrigatória (crítico)"
+                            ? "Foto obrigatória (tipo foto / crítico)"
                             : "URL da imagem obrigatória (crítico)"
                           : usePhotoStorage
                             ? "Foto opcional — pode marcar concluído sem foto"
                             : "URL opcional — pode marcar concluído")}
                       {it.item_type === "photo" && it.is_critical ? " · crítico" : ""}
+                      {it.item_type !== "photo" &&
+                        it.requires_photo &&
+                        ` · foto obrigatória${usePhotoStorage ? "" : " (URL)"}`}
                     </p>
                   </div>
 
@@ -370,33 +424,49 @@ export function RunExecutionClient({
                     <p className="whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">{st.text_value || "—"}</p>
                   )}
 
-                  {it.item_type === "photo" && (
+                  {needsPhotoEvidence && (
                     <div className="space-y-2">
                       {status !== "completed" && (
                         <>
                           {usePhotoStorage ? (
-                            <input
-                              type="file"
-                              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                              className="max-w-full text-sm"
-                              disabled={pending}
-                              onChange={(e) => {
-                                const f = e.target.files?.[0];
-                                e.target.value = "";
-                                if (f) start(() => uploadPhoto(it.id, f, st));
-                              }}
-                            />
+                            <div className="space-y-1">
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                                className="max-w-full text-sm"
+                                disabled={pending}
+                                onChange={(e) => {
+                                  const f = e.target.files?.[0];
+                                  e.target.value = "";
+                                  if (f) start(() => uploadPhoto(it.id, f, st));
+                                }}
+                              />
+                              <p className="text-xs text-zinc-500">
+                                A imagem é gravada com o seu nome e a hora no rodapé, e na base de dados ficam registados
+                                o envio e o utilizador ligado à sessão.
+                              </p>
+                            </div>
                           ) : (
                             <button
                               type="button"
                               disabled={pending}
-                              onClick={() => {
-                                const url = prompt("Cole o URL da imagem (https://…):");
-                                if (!url?.trim()) return;
-                                const next = { ...st, photo_path: url.trim(), completed: true };
-                                setByItem((p) => ({ ...p, [it.id]: next }));
-                                start(() => persistRow(it.id, next));
-                              }}
+                              onClick={() =>
+                                start(async () => {
+                                  const url = prompt("Cole o URL da imagem (https://…):");
+                                  if (!url?.trim()) return;
+                                  const stamp = await getEvidenceStampTime();
+                                  const who = submitterDisplayName.trim() || "Colaborador";
+                                  const caption = `${who} · ${new Date(stamp.iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "medium" })} (ao submeter URL)`;
+                                  const next = {
+                                    ...st,
+                                    photo_path: url.trim(),
+                                    completed: true,
+                                    photo_evidence_caption: caption,
+                                  };
+                                  setByItem((p) => ({ ...p, [it.id]: next }));
+                                  await persistRow(it.id, next, { photoEvidenceCaption: caption });
+                                })
+                              }
                               className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm dark:border-zinc-600"
                             >
                               Definir URL da foto
@@ -405,6 +475,32 @@ export function RunExecutionClient({
                         </>
                       )}
                       <EvidenceImage photoPath={st.photo_path} usePhotoStorage={usePhotoStorage} />
+                      {st.photo_path ? (
+                        <p className="mt-2 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
+                          {usePhotoStorage && st.photo_uploaded_at && st.photo_uploaded_by_display ? (
+                            <>
+                              <span className="font-medium text-zinc-700 dark:text-zinc-300">Registo no servidor:</span>{" "}
+                              {st.photo_uploaded_by_display} ·{" "}
+                              {new Date(st.photo_uploaded_at).toLocaleString("pt-BR", {
+                                dateStyle: "short",
+                                timeStyle: "medium",
+                              })}
+                            </>
+                          ) : !usePhotoStorage && st.photo_evidence_caption ? (
+                            <>
+                              <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                                Referência ao submeter:
+                              </span>{" "}
+                              {st.photo_evidence_caption}
+                            </>
+                          ) : usePhotoStorage ? (
+                            <>
+                              Ao confirmar o envio, este bloco mostra o nome e a hora registados na base de dados pela
+                              sua sessão (após atualizar a página).
+                            </>
+                          ) : null}
+                        </p>
+                      ) : null}
                     </div>
                   )}
                 </div>

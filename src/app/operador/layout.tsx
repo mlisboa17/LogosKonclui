@@ -20,14 +20,22 @@ export default async function OperadorLayout({ children }: { children: React.Rea
             </p>
             <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">Logos Koncui</p>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
-            <Link
-              href="/painel"
-              className="rounded-lg px-3 py-2 text-xs font-medium text-emerald-800 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/50"
-            >
-              Painel
-            </Link>
-            <LogoutButton />
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <div className="flex items-center gap-1">
+              <Link
+                href="/painel"
+                className="rounded-lg px-3 py-2 text-xs font-medium text-emerald-800 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/50"
+              >
+                Painel
+              </Link>
+              <LogoutButton emphasize />
+            </div>
+            {!isJsonStoreMode() && (
+              <p className="max-w-[11rem] text-right text-[10px] leading-tight text-zinc-500 dark:text-zinc-400">
+                Celular partilhado: <strong className="text-zinc-700 dark:text-zinc-300">Sair</strong> ao
+                terminar.
+              </p>
+            )}
           </div>
         </div>
       </header>

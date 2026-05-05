@@ -3,6 +3,8 @@ export type RunItemForValidation = {
   title: string;
   item_type: string;
   is_critical: boolean;
+  /** Exige evidência fotográfica mesmo em itens sim/número/texto */
+  requires_photo?: boolean;
 };
 
 export type RunResponseForValidation = {
@@ -20,8 +22,7 @@ export function responseRowForItem(
   return responses.find((r) => r.checklist_item_id === itemId);
 }
 
-/** Item considerado cumprido para fechar a execução */
-export function isItemSatisfied(
+function baseTypeSatisfied(
   item: Pick<RunItemForValidation, "item_type" | "is_critical">,
   row: RunResponseForValidation | undefined,
 ): boolean {
@@ -36,7 +37,6 @@ export function isItemSatisfied(
     case "text":
       return Boolean((r.text_value ?? "").trim());
     case "photo":
-      /* Crítico: evidência obrigatória. Não crítico: basta marcar concluído (foto opcional). */
       if (item.is_critical) {
         return Boolean((r.photo_path ?? "").trim());
       }
@@ -44,6 +44,18 @@ export function isItemSatisfied(
     default:
       return r.completed === true;
   }
+}
+
+/** Item considerado cumprido para fechar a execução */
+export function isItemSatisfied(
+  item: Pick<RunItemForValidation, "item_type" | "is_critical" | "requires_photo">,
+  row: RunResponseForValidation | undefined,
+): boolean {
+  if (!baseTypeSatisfied(item, row)) return false;
+  if (item.requires_photo && !Boolean((row?.photo_path ?? "").trim())) {
+    return false;
+  }
+  return true;
 }
 
 export function firstUnsatisfiedItemTitle(

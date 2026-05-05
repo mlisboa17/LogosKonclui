@@ -133,6 +133,7 @@ export async function jsonSeedDemoTemplates(organizationId: string): Promise<{ o
           itemType: it.itemType as ItemType,
           isCritical: it.isCritical,
           weight: it.weight,
+          requiresPhoto: it.requiresPhoto === true,
         });
       });
       existing.add(d.name);
@@ -205,6 +206,106 @@ export async function jsonCreateChecklistFromTemplate(input: {
       itemType: it.itemType,
       isCritical: it.isCritical,
       weight: it.weight,
+      requiresPhoto: it.requiresPhoto === true,
+    }));
+    return {
+      next: {
+        ...s,
+        checklists: [...s.checklists, newChecklist],
+        checklistItems: [...s.checklistItems, ...newItems],
+      },
+      result: { checklistId },
+    };
+  });
+}
+
+export async function jsonCreateChecklistScratch(input: {
+  organizationId: string;
+  unitId: string;
+  name: string;
+  items: {
+    title: string;
+    itemType: ItemType;
+    isCritical: boolean;
+    weight: number;
+    requiresPhoto: boolean;
+  }[];
+}): Promise<{ error: string } | { checklistId: string }> {
+  return withAppStateLock<{ error: string } | { checklistId: string }>(async (s) => {
+    const u = s.units.find((x) => x.id === input.unitId && x.organizationId === input.organizationId);
+    if (!u) return { next: s, result: { error: "Unidade inválida." as const } };
+    const name = input.name.trim();
+    if (!name) return { next: s, result: { error: "Nome obrigatório." as const } };
+    const cleaned = input.items.filter((x) => x.title.trim());
+    if (!cleaned.length) {
+      return { next: s, result: { error: "Adicione pelo menos um item." as const } };
+    }
+    const checklistId = id();
+    const newChecklist = {
+      id: checklistId,
+      organizationId: input.organizationId,
+      unitId: input.unitId,
+      templateId: null as string | null,
+      name,
+      isActive: true,
+    };
+    const newItems = cleaned.map((it, i) => ({
+      id: id(),
+      checklistId,
+      title: it.title.trim(),
+      sortOrder: i,
+      itemType: it.itemType,
+      isCritical: it.isCritical,
+      weight: Math.max(1, Math.min(10, it.weight)),
+      requiresPhoto: it.requiresPhoto,
+    }));
+    return {
+      next: {
+        ...s,
+        checklists: [...s.checklists, newChecklist],
+        checklistItems: [...s.checklistItems, ...newItems],
+      },
+      result: { checklistId },
+    };
+  });
+}
+
+export async function jsonDuplicatePublishedChecklist(input: {
+  organizationId: string;
+  unitId: string;
+  sourceChecklistId: string;
+  newName: string;
+}): Promise<{ error: string } | { checklistId: string }> {
+  return withAppStateLock<{ error: string } | { checklistId: string }>(async (s) => {
+    const u = s.units.find((x) => x.id === input.unitId && x.organizationId === input.organizationId);
+    if (!u) return { next: s, result: { error: "Unidade inválida." as const } };
+    const src = s.checklists.find(
+      (c) => c.id === input.sourceChecklistId && c.organizationId === input.organizationId,
+    );
+    if (!src) return { next: s, result: { error: "Checklist de origem não encontrada." as const } };
+    let nm = input.newName.trim();
+    if (!nm) nm = `${src.name.trim() || "Checklist"} (cópia)`;
+    const srcItems = s.checklistItems
+      .filter((i) => i.checklistId === input.sourceChecklistId)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    const checklistId = id();
+    const newChecklist = {
+      id: checklistId,
+      organizationId: input.organizationId,
+      unitId: input.unitId,
+      templateId: null as string | null,
+      name: nm,
+      isActive: true,
+    };
+    const newItems = srcItems.map((it, i) => ({
+      id: id(),
+      checklistId,
+      title: it.title,
+      sortOrder: i,
+      itemType: it.itemType,
+      isCritical: it.isCritical,
+      weight: it.weight,
+      requiresPhoto: it.requiresPhoto === true,
     }));
     return {
       next: {
@@ -266,12 +367,27 @@ export async function jsonUpsertResponse(input: {
   numeric_value?: number | null;
   text_value?: string | null;
   photo_path?: string | null;
+  photo_evidence_caption?: string | null;
 }): Promise<{ ok: true }> {
   return withAppStateLock<{ ok: true }>(async (s) => {
     const idx = s.checklistRunResponses.findIndex(
       (r) => r.runId === input.runId && r.checklistItemId === input.checklistItemId,
     );
     const prev = idx >= 0 ? s.checklistRunResponses[idx] : null;
+    const prevPath = (prev?.photoPath ?? "").trim();
+    const pathIncoming = input.photo_path !== undefined;
+    const nextPath = pathIncoming
+      ? (input.photo_path?.trim() ?? "")
+      : prevPath;
+    let photoEvidenceCaption = prev?.photoEvidenceCaption ?? null;
+    if (pathIncoming) {
+      if (!nextPath) photoEvidenceCaption = null;
+      else if (nextPath !== prevPath && input.photo_evidence_caption !== undefined) {
+        photoEvidenceCaption = input.photo_evidence_caption;
+      }
+    } else if (input.photo_evidence_caption !== undefined) {
+      photoEvidenceCaption = input.photo_evidence_caption;
+    }
     const row = {
       id: idx >= 0 ? s.checklistRunResponses[idx].id : id(),
       runId: input.runId,
@@ -282,6 +398,7 @@ export async function jsonUpsertResponse(input: {
         input.numeric_value !== undefined ? input.numeric_value : (prev?.numericValue ?? null),
       textValue: input.text_value !== undefined ? input.text_value : (prev?.textValue ?? null),
       photoPath: input.photo_path !== undefined ? input.photo_path : (prev?.photoPath ?? null),
+      photoEvidenceCaption,
     };
     const list = [...s.checklistRunResponses];
     if (idx >= 0) list[idx] = row;

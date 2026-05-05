@@ -25,6 +25,7 @@ export type ChecklistTemplateItem = {
   itemType: ItemType;
   isCritical: boolean;
   weight: number;
+  requiresPhoto?: boolean;
 };
 export type Checklist = {
   id: string;
@@ -42,6 +43,7 @@ export type ChecklistItem = {
   itemType: ItemType;
   isCritical: boolean;
   weight: number;
+  requiresPhoto?: boolean;
 };
 export type ChecklistRun = {
   id: string;
@@ -84,6 +86,8 @@ export type ChecklistRunResponse = {
   textValue?: string | null;
   /** URL (modo JSON) ou caminho no bucket `checklist-evidence` (Supabase) */
   photoPath?: string | null;
+  /** Modo arquivo local: texto exibido como registo da evidência fotográfica */
+  photoEvidenceCaption?: string | null;
 };
 
 export type AppState = {

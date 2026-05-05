@@ -13,7 +13,9 @@ export default function CadastroPage() {
         </Link>
         <h1 className="mb-2 text-2xl font-semibold tracking-tight">Criar conta</h1>
         <p className="mb-8 text-sm text-zinc-600 dark:text-zinc-400">
-          Convênio, posto ou restaurante do mesmo grupo.
+          Conta única para toda a equipa. Depois do registo, o <strong>gestor</strong> vai a{" "}
+          <strong>Painel → Equipe</strong> e adiciona o teu utilizador como <strong>operador</strong> (ou
+          gestor) com o mesmo email — não existe um formulário separado só para operadores.
         </p>
         <RegisterForm />
       </div>

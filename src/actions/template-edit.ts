@@ -9,6 +9,7 @@ export type TemplateItemInput = {
   item_type: "boolean" | "number" | "text" | "photo";
   is_critical: boolean;
   weight?: number;
+  requires_photo?: boolean;
 };
 
 export async function saveChecklistTemplate(input: {
@@ -74,6 +75,7 @@ export async function saveChecklistTemplate(input: {
     item_type: it.item_type,
     is_critical: it.is_critical,
     weight: Math.max(1, Math.min(10, it.weight ?? 1)),
+    requires_photo: it.requires_photo === true,
   }));
 
   const { error: iErr } = await supabase.from("checklist_template_items").insert(rows);

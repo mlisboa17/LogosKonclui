@@ -23,10 +23,17 @@ export function CreateChecklistFromTemplateForm({
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  if (!units.length || !templates.length) {
+  if (!units.length) {
+    return (
+      <p className="text-sm text-zinc-500">Cadastre pelo menos uma unidade para publicar checklists.</p>
+    );
+  }
+
+  if (!templates.length) {
     return (
       <p className="text-sm text-zinc-500">
-        Cadastre pelo menos uma unidade e importe modelos na aba Modelos.
+        Sem modelos. Crie ou importe modelos na página <strong>Modelos</strong>, ou use a aba &quot;Do zero&quot; /
+        &quot;Copiar checklist&quot;.
       </p>
     );
   }

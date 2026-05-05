@@ -20,6 +20,7 @@ export default async function ExecucaoPage({ params }: { params: Promise<Params>
       title: i.title,
       is_critical: i.isCritical,
       item_type: i.itemType,
+      requires_photo: i.requiresPhoto === true,
     }));
     const responsesUi = responses.map((r) => ({
       checklist_item_id: r.checklistItemId,
@@ -27,6 +28,7 @@ export default async function ExecucaoPage({ params }: { params: Promise<Params>
       numeric_value: r.numericValue ?? null,
       text_value: r.textValue ?? null,
       photo_path: r.photoPath ?? null,
+      photo_evidence_caption: r.photoEvidenceCaption ?? null,
     }));
     return (
       <div>
@@ -53,6 +55,7 @@ export default async function ExecucaoPage({ params }: { params: Promise<Params>
             items={itemsUi}
             responses={responsesUi}
             usePhotoStorage={false}
+            submitterDisplayName="Modo demonstração (JSON)"
           />
         </div>
       </div>
@@ -63,7 +66,7 @@ export default async function ExecucaoPage({ params }: { params: Promise<Params>
   if (!supabase) notFound();
 
   const ctx = await getSessionContext(supabase);
-  if (!ctx.organizations.length) notFound();
+  if (!ctx.organizations.length || !ctx.user) notFound();
 
   const orgId = ctx.organizations[0].id;
 
@@ -77,14 +80,55 @@ export default async function ExecucaoPage({ params }: { params: Promise<Params>
 
   const { data: items } = await supabase
     .from("checklist_items")
-    .select("id, title, is_critical, item_type, sort_order")
+    .select("id, title, is_critical, item_type, sort_order, requires_photo")
     .eq("checklist_id", run.checklist_id)
     .order("sort_order", { ascending: true });
 
   const { data: responses } = await supabase
     .from("checklist_run_responses")
-    .select("checklist_item_id, completed, numeric_value, text_value, photo_path")
+    .select(
+      "checklist_item_id, completed, numeric_value, text_value, photo_path, photo_uploaded_at, photo_uploaded_by",
+    )
     .eq("run_id", id);
+
+  const uploaderIds = [
+    ...new Set(
+      (responses ?? []).map((r) => r.photo_uploaded_by).filter((x): x is string => Boolean(x)),
+    ),
+  ];
+  const nameByUser = new Map<string, string>();
+  for (const uid of uploaderIds) {
+    const { data: pr } = await supabase.from("profiles").select("full_name").eq("id", uid).maybeSingle();
+    nameByUser.set(uid, typeof pr?.full_name === "string" ? pr.full_name.trim() : "");
+  }
+
+  const responsesResolved = (responses ?? []).map((r) => {
+    const by = r.photo_uploaded_by;
+    let display: string | null = null;
+    if (by) {
+      display = nameByUser.get(by) || null;
+      if (!display) display = "Equipa";
+    }
+    return {
+      checklist_item_id: r.checklist_item_id,
+      completed: r.completed,
+      numeric_value: r.numeric_value,
+      text_value: r.text_value,
+      photo_path: r.photo_path,
+      photo_uploaded_at: r.photo_uploaded_at ?? null,
+      photo_uploaded_by_display: display,
+    };
+  });
+
+  const { data: meProf } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", ctx.user.id)
+    .maybeSingle();
+  const submitterDisplayName =
+    (typeof meProf?.full_name === "string" && meProf.full_name.trim()) ||
+    ctx.user.email ||
+    "Colaborador";
 
   const un = run.units as unknown as { name: string } | null;
   const cl = run.checklists as unknown as { name: string } | null;
@@ -112,8 +156,9 @@ export default async function ExecucaoPage({ params }: { params: Promise<Params>
           organizationId={orgId}
           status={run.status}
           items={items ?? []}
-          responses={responses ?? []}
+          responses={responsesResolved}
           usePhotoStorage
+          submitterDisplayName={submitterDisplayName}
         />
       </div>
     </div>

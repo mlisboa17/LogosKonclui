@@ -23,8 +23,8 @@ export function RegisterForm() {
       setMsg("Configure as variáveis do Supabase no .env.local.");
       return;
     }
-    if (password.length < 6) {
-      setMsg("A senha deve ter pelo menos 6 caracteres.");
+    if (!/^\d{4,8}$/.test(password)) {
+      setMsg("Defina um PIN numérico de 4 a 8 dígitos.");
       return;
     }
     setLoading(true);
@@ -74,13 +74,16 @@ export function RegisterForm() {
         />
       </label>
       <label className="flex flex-col gap-1 text-sm font-medium">
-        Senha
+        PIN numérico
         <input
           type="password"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={8}
           autoComplete="new-password"
           required
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value.replace(/[^\d]/g, "").slice(0, 8))}
           className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-base dark:border-zinc-600 dark:bg-zinc-900"
         />
       </label>

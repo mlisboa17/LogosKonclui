@@ -1,14 +1,16 @@
 import type { ItemType } from "@/lib/store/types";
 
 /**
- * Modelos prontos (estilo Koncluí + operação varejo/conveniência/posto).
- * O gestor importa em Modelos e pode editar em "Editar" (owner/manager).
+ * Modelos prontos focados em conveniência / varejo (freezers, gôndolas, limpeza).
+ * O gestor importa em Modelos e pode editar em "Editar".
  */
 export type DemoTemplateItem = {
   title: string;
   itemType: ItemType;
   isCritical: boolean;
   weight: number;
+  /** Evidência fotográfica obrigatória mesmo se o tipo for sim/número/texto */
+  requiresPhoto?: boolean;
 };
 
 export type DemoTemplate = {
@@ -26,17 +28,35 @@ export const DEMO_CHECKLIST_TEMPLATES: DemoTemplate[] = [
       "Foco semanal: estoque, validade, preços, limpeza profunda, equipamentos e equipe. Baseado em boas práticas de operação de loja e rotinas de conveniência (limpeza, gôndolas, equipamentos).",
     items: [
       { title: "Validade: checar lanches, iogurtes e pães com vencimento crítico", itemType: "boolean", isCritical: true, weight: 2 },
-      { title: "Reabastecer gôndolas, geladeiras e ilhas (giro alto)", itemType: "boolean", isCritical: false, weight: 1 },
+      {
+        title: "Reabastecer gôndolas, geladeiras e ilhas (giro alto)",
+        itemType: "boolean",
+        isCritical: false,
+        weight: 1,
+        requiresPhoto: true,
+      },
       { title: "Conferir etiquetas de preço e destaque de promoções", itemType: "boolean", isCritical: false, weight: 1 },
       { title: "Montar/ajustar displays de ofertas e PDV", itemType: "boolean", isCritical: false, weight: 1 },
       { title: "Estoque mínimo de embalagens e insumos de limpeza", itemType: "boolean", isCritical: false, weight: 1 },
-      { title: "Limpeza interna/externa de freezers e geladeiras de bebidas", itemType: "boolean", isCritical: true, weight: 2 },
+      {
+        title: "Limpeza interna/externa de freezers e geladeiras de bebidas",
+        itemType: "boolean",
+        isCritical: true,
+        weight: 2,
+        requiresPhoto: true,
+      },
       { title: "Higienizar máquina de café, forno/estufa de salgados", itemType: "boolean", isCritical: true, weight: 2 },
       { title: "Foto da gôndola de pães/salgados (evidência validade/reposição)", itemType: "photo", isCritical: false, weight: 1 },
       { title: "Piso, fachada, banheiros e lixeiras (padrão de loja)", itemType: "boolean", isCritical: false, weight: 1 },
       { title: "Balcão, checkout e fila organizados", itemType: "boolean", isCritical: false, weight: 1 },
       { title: "Testar checkouts, iluminação e câmaras frias (anomalias?)", itemType: "boolean", isCritical: true, weight: 2 },
-      { title: "Temperatura registada da câmara fria principal (°C)", itemType: "number", isCritical: true, weight: 2 },
+      {
+        title: "Temperatura registada da câmara fria principal (°C) — foto do display",
+        itemType: "number",
+        isCritical: true,
+        weight: 2,
+        requiresPhoto: true,
+      },
       { title: "Fachada: cartazes, limpeza de vidros e lâmpadas queimadas", itemType: "boolean", isCritical: false, weight: 1 },
       { title: "Banheiros com papel, sabonete e odor aceitável", itemType: "boolean", isCritical: false, weight: 1 },
       { title: "Breve alinhamento com equipe (metas / feedback)", itemType: "text", isCritical: false, weight: 1 },
@@ -62,7 +82,7 @@ export const DEMO_CHECKLIST_TEMPLATES: DemoTemplate[] = [
   {
     name: "Abertura loja (conveniência)",
     sector: "Conveniência",
-    description: "Rotina de abertura – estilo Koncluí (padronizar início do dia).",
+    description: "Rotina de abertura padronizada: loja pronta para o primeiro cliente.",
     items: [
       { title: "Iluminação, letreiros e música ambiente", itemType: "boolean", isCritical: false, weight: 1 },
       { title: "Cofre e numerário inicial conferidos", itemType: "boolean", isCritical: true, weight: 2 },

@@ -38,11 +38,14 @@ export function TemplateEditorClient({
   const [rows, setRows] = useState<TemplateItemInput[]>(
     initialItems.length
       ? initialItems
-      : [{ title: "", item_type: "boolean", is_critical: false, weight: 1 }],
+      : [{ title: "", item_type: "boolean", is_critical: false, weight: 1, requires_photo: false }],
   );
 
   function addRow() {
-    setRows((r) => [...r, { title: "", item_type: "boolean", is_critical: false, weight: 1 }]);
+    setRows((r) => [
+      ...r,
+      { title: "", item_type: "boolean", is_critical: false, weight: 1, requires_photo: false },
+    ]);
   }
 
   function removeRow(i: number) {
@@ -66,6 +69,7 @@ export function TemplateEditorClient({
               item_type: x.item_type,
               is_critical: x.is_critical,
               weight: x.weight ?? 1,
+              requires_photo: x.requires_photo === true,
             }))
             .filter((x) => x.title.length > 0);
           if (!cleaned.length) {
@@ -142,7 +146,7 @@ export function TemplateEditorClient({
                 />
                 <div className="flex flex-wrap gap-3">
                   <label className="flex flex-col gap-0.5 text-xs text-zinc-500">
-                    Tipo (Koncluí)
+                    Tipo de resposta
                     <select
                       value={row.item_type}
                       onChange={(e) =>
@@ -165,6 +169,15 @@ export function TemplateEditorClient({
                       className="accent-emerald-700"
                     />
                     Crítico
+                  </label>
+                  <label className="flex items-center gap-2 pt-5 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={row.requires_photo === true}
+                      onChange={(e) => updateRow(i, { requires_photo: e.target.checked })}
+                      className="accent-emerald-700"
+                    />
+                    Exige foto
                   </label>
                   <label className="flex flex-col gap-0.5 text-xs text-zinc-500">
                     Peso (1–10)

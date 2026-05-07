@@ -18,7 +18,7 @@ export default async function OperadorLayout({ children }: { children: React.Rea
             <p className="truncate text-xs font-medium uppercase tracking-wide text-emerald-800 dark:text-emerald-400">
               Modo operador
             </p>
-            <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">Logos Koncui</p>
+            <p className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">Logos Konclui</p>
           </div>
           <div className="flex shrink-0 flex-col items-end gap-1">
             <div className="flex items-center gap-1">

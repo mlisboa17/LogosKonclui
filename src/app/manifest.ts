@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 /** PWA: instalável “Adicionar ao ecrã”. Ícone SVG funciona na maioria dos browsers; acrescente PNG 192/512 em /public/icons/ se precisar iOS antigo. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Logos Koncui",
-    short_name: "Koncui",
+    name: "Logos Konclui",
+    short_name: "Konclui",
     description:
       "Checklists operacionais para conveniência, posto e restaurante — execuções, prazos e equipa.",
     start_url: "/operador",

@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div className="flex min-h-full flex-col bg-gradient-to-b from-emerald-950 via-zinc-950 to-black text-zinc-100">
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-6">
-        <span className="text-lg font-semibold tracking-tight text-white">Logos Koncui</span>
+        <span className="text-lg font-semibold tracking-tight text-white">Logos Konclui</span>
         <div className="flex gap-3 text-sm">
           <Link href="/entrar" className="rounded-lg px-3 py-2 text-zinc-200 hover:bg-white/10">
             Entrar

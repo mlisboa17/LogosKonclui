@@ -24,7 +24,7 @@ export default async function PainelLayout({
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
           <div className="min-w-0">
             <Link href="/painel" className="block text-base font-semibold tracking-tight text-emerald-800 dark:text-emerald-400">
-              Logos Koncui
+              Logos Konclui
             </Link>
             <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">Operação diária com rastreabilidade</p>
           </div>

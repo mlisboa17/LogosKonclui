@@ -16,13 +16,13 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Logos Koncui — Checklists para conveniência, posto e restaurante",
+  title: "Logos Konclui — Checklists para conveniência, posto e restaurante",
   description:
     "Gestão operacional com modelos, execuções, prazos e painel multi-unidade para o grupo Logos.",
-  applicationName: "Logos Koncui",
+  applicationName: "Logos Konclui",
   appleWebApp: {
     capable: true,
-    title: "Koncui",
+    title: "Konclui",
     statusBarStyle: "default",
   },
   formatDetection: {

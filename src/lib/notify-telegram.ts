@@ -50,7 +50,10 @@ export async function notifyTelegramRunScheduled(runId: string): Promise<void> {
       `• Prazo: ${when}\n` +
       `• ID: ${runId}`;
 
-    await sendTelegramMessage(text);
+    const res = await sendTelegramMessage(text);
+    if (!res.ok) {
+      console.error("[notifyTelegramRunScheduled] Telegram", { runId, error: res.error });
+    }
   } catch (e) {
     console.error("[notifyTelegramRunScheduled]", e);
   }
@@ -90,7 +93,10 @@ export async function notifyTelegramRunCompleted(runId: string): Promise<void> {
       `• Unidade: ${unit}\n` +
       `• ID: ${runId}`;
 
-    await sendTelegramMessage(text);
+    const res = await sendTelegramMessage(text);
+    if (!res.ok) {
+      console.error("[notifyTelegramRunCompleted] Telegram", { runId, error: res.error });
+    }
   } catch (e) {
     console.error("[notifyTelegramRunCompleted]", e);
   }

@@ -108,7 +108,10 @@ export async function runJsonScheduleProcessor(): Promise<ProcessorResult> {
         `• Prazo: ${when}\n` +
         `• ID: ${r.id}`;
       const res = await sendTelegramMessage(text);
-      if (!res.ok) errors.push(res.error);
+      if (!res.ok) {
+        errors.push(res.error);
+        console.error("[schedule-processor] Telegram falhou (JSON)", { runId: r.id, error: res.error });
+      }
     }
   }
 
@@ -248,7 +251,10 @@ export async function runSupabaseScheduleProcessor(
         `• Prazo: ${when}\n` +
         `• ID: ${r.id}`;
       const res = await sendTelegramMessage(text);
-      if (!res.ok) errors.push(res.error);
+      if (!res.ok) {
+        errors.push(res.error);
+        console.error("[schedule-processor] Telegram falhou (Supabase)", { runId: r.id, error: res.error });
+      }
     }
   }
 

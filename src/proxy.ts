@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { isJsonStoreMode } from "@/lib/data-mode";
 import { updateSession } from "@/lib/supabase/middleware";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (isJsonStoreMode()) {
     return NextResponse.next({ request });
   }

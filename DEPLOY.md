@@ -1,4 +1,4 @@
-# Hospedar Logos Koncui (Vercel)
+# Hospedar Logos Konclui (Vercel)
 
 ## Pré-requisitos
 
@@ -23,7 +23,7 @@ Defina no painel da Vercel → Project → Settings → Environment Variables:
 | `SUPABASE_SERVICE_ROLE_KEY` | Opcional | Convites por email / operações admin no servidor. |
 | `CRON_SECRET` | Opcional | Segredo para `GET /api/cron/process-schedules`. |
 | `SCHEDULE_TIMEZONE` | Opcional | Ex.: `America/Sao_Paulo`. |
-| Variáveis Telegram | Opcional | Se usares notificações Telegram no servidor. |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Opcional | Alertas no Telegram; configurar também em **Production** na Vercel. Ver `/painel/telegram`. |
 
 **Auth Supabase:** em Authentication → URL Configuration, define **Site URL** e **Redirect URLs** com o domínio Vercel (ex. `https://xxx.vercel.app/auth/callback`).
 

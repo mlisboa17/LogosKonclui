@@ -102,7 +102,7 @@ export async function runJsonScheduleProcessor(): Promise<ProcessorResult> {
       const unit = s2.units.find((u) => u.id === r.unitId)?.name ?? "Unidade";
       const when = DateTime.fromISO(r.dueAt, { zone: "utc" }).setZone(zone).toFormat("dd/LL/yyyy HH:mm");
       const text =
-        `⚠️ Logos Koncui — execução ATRASADA\n` +
+        `⚠️ Logos Konclui — execução ATRASADA\n` +
         `• Checklist: ${checklist}\n` +
         `• Unidade: ${unit}\n` +
         `• Prazo: ${when}\n` +
@@ -242,7 +242,7 @@ export async function runSupabaseScheduleProcessor(
       const unit = un?.name ?? "Unidade";
       const when = DateTime.fromISO(r.dueAt, { zone: "utc" }).setZone(zone).toFormat("dd/LL/yyyy HH:mm");
       const text =
-        `⚠️ Logos Koncui — execução ATRASADA\n` +
+        `⚠️ Logos Konclui — execução ATRASADA\n` +
         `• Checklist: ${checklist}\n` +
         `• Unidade: ${unit}\n` +
         `• Prazo: ${when}\n` +

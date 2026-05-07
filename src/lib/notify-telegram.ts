@@ -44,7 +44,7 @@ export async function notifyTelegramRunScheduled(runId: string): Promise<void> {
     }
 
     const text =
-      `📋 Logos Koncui — nova execução\n` +
+      `📋 Logos Konclui — nova execução\n` +
       `• Checklist: ${checklist}\n` +
       `• Unidade: ${unit}\n` +
       `• Prazo: ${when}\n` +
@@ -85,7 +85,7 @@ export async function notifyTelegramRunCompleted(runId: string): Promise<void> {
     }
 
     const text =
-      `✅ Logos Koncui — execução concluída\n` +
+      `✅ Logos Konclui — execução concluída\n` +
       `• Checklist: ${checklist}\n` +
       `• Unidade: ${unit}\n` +
       `• ID: ${runId}`;
